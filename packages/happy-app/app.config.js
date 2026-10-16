@@ -37,7 +37,11 @@ const bundleId = process.env.APP_BUNDLE_ID
     }[variant];
 // const stagingElevenLabsAgentId = 'agent_7801k2c0r5hjfraa1kdbytpvs6yt';
 const productionElevenLabsAgentId = 'agent_6701k211syvvegba4kt7m68nxjmw';
-const elevenLabsAgentId = {
+// Voice conversations run on ElevenLabs' hosted agents, so this id is a
+// third-party dependency rather than a branding value. It is overridable so a
+// deployment can point at its own agent without editing code; the default is
+// upstream's agent. Same convention as the EXPO_PUBLIC_REVENUE_CAT_* keys below.
+const elevenLabsAgentId = process.env.APP_ELEVENLABS_AGENT_ID || {
     development: productionElevenLabsAgentId,
     preview: productionElevenLabsAgentId,
     production: productionElevenLabsAgentId,
@@ -129,7 +133,7 @@ export default {
             ],
             blockedPermissions: [
                 "android.permission.ACTIVITY_RECOGNITION",
-                // Not using external storage/media access for now 鈥?blocks Google Play photo/video permission declaration
+                // Not using external storage/media access for now 閳?blocks Google Play photo/video permission declaration
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE",
                 "android.permission.READ_MEDIA_IMAGES",
@@ -245,7 +249,9 @@ export default {
                 root: "./sources/app"
             },
             eas: {
-                projectId: "4558dd3d-cd5a-47cd-bad9-e591a241cc06"
+                // Upstream's EAS project. A fork must point at its own, or
+                // builds and OTA updates land in upstream's project.
+                projectId: process.env.APP_EAS_PROJECT_ID || "4558dd3d-cd5a-47cd-bad9-e591a241cc06"
             },
             app: {
                 postHogKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY,
@@ -258,6 +264,6 @@ export default {
                 buildCommitTimestamp: buildMetadata.commitTimestamp,
             }
         },
-        owner: "bulkacorp"
+        owner: process.env.APP_EAS_OWNER || "bulkacorp"
     }
 };
