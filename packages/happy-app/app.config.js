@@ -15,11 +15,19 @@ const variant = process.env.APP_ENV || 'development';
  *   APP_BRAND_DOMAIN  universal-link host   (default "app.happy.engineering")
  *   APP_BUNDLE_ID     production bundle id  (default "com.ex3ndr.happy");
  *                     dev/preview derive as "<id>.development" / "<id>.preview"
+ *   APP_BRAND_ASSETS  directory holding the image assets, so a fork can drop in
+ *                     its own icon/splash/favicon without editing code
+ *                     (default "./sources/assets/images")
  */
 const brandName = process.env.APP_BRAND_NAME || 'Happy';
 const brandSlug = process.env.APP_BRAND_SLUG || 'happy';
 const brandScheme = process.env.APP_BRAND_SCHEME || 'happy';
 const brandDomain = process.env.APP_BRAND_DOMAIN || 'app.happy.engineering';
+// Upstream ships its brand images under this directory; a fork points this at
+// its own directory (or drops replacement files with the same names in place).
+// Only the images move 鈥?the router root "./sources/app" is application code,
+// not branding, and is deliberately left alone.
+const brandAssets = process.env.APP_BRAND_ASSETS || './sources/assets/images';
 
 const name = process.env.APP_BRAND_NAME
     ? (variant === 'production' ? brandName : `${brandName} (${variant})`)
@@ -90,7 +98,7 @@ export default {
         version: "1.8.0",
         runtimeVersion: "21",
         orientation: "default",
-        icon: "./sources/assets/images/icon.png",
+        icon: `${brandAssets}/icon.png`,
         scheme: brandScheme,
         userInterfaceStyle: "automatic",
         ios: {
@@ -121,8 +129,8 @@ export default {
         },
         android: {
             adaptiveIcon: {
-                foregroundImage: "./sources/assets/images/icon-adaptive.png",
-                monochromeImage: "./sources/assets/images/icon-monochrome.png",
+                foregroundImage: `${brandAssets}/icon-adaptive.png`,
+                monochromeImage: `${brandAssets}/icon-monochrome.png`,
                 backgroundColor: "#000000"
             },
             permissions: [
@@ -133,7 +141,7 @@ export default {
             ],
             blockedPermissions: [
                 "android.permission.ACTIVITY_RECOGNITION",
-                // Not using external storage/media access for now 閳?blocks Google Play photo/video permission declaration
+                // Not using external storage/media access for now 闁?blocks Google Play photo/video permission declaration
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE",
                 "android.permission.READ_MEDIA_IMAGES",
@@ -159,7 +167,7 @@ export default {
         web: {
             bundler: "metro",
             output: "single",
-            favicon: "./sources/assets/images/favicon.png"
+            favicon: `${brandAssets}/favicon.png`
         },
         plugins: [
             require("./plugins/withEinkCompatibility.js"),
@@ -212,7 +220,7 @@ export default {
                 "expo-notifications",
                 {
                     "enableBackgroundRemoteNotifications": true,
-                    "icon": "./sources/assets/images/icon-notification.png"
+                    "icon": `${brandAssets}/icon-notification.png`
                 }
             ],
             [
@@ -225,10 +233,10 @@ export default {
                         }
                     },
                     android: {
-                        image: "./sources/assets/images/splash-android-light.png",
+                        image: `${brandAssets}/splash-android-light.png`,
                         backgroundColor: "#F5F5F5",
                         dark: {
-                            image: "./sources/assets/images/splash-android-dark.png",
+                            image: `${brandAssets}/splash-android-dark.png`,
                             backgroundColor: "#000000",
                         }
                     }
@@ -236,7 +244,10 @@ export default {
             ]
         ],
         updates: {
-            url: "https://u.expo.dev/4558dd3d-cd5a-47cd-bad9-e591a241cc06",
+            // Same EAS project as `extra.eas.projectId` above: leaving this
+            // pointing at upstream's project would deliver OTA updates built
+            // from upstream's code into a fork's installed app.
+            url: `https://u.expo.dev/${process.env.APP_EAS_PROJECT_ID || "4558dd3d-cd5a-47cd-bad9-e591a241cc06"}`,
             requestHeaders: {
                 "expo-channel-name": "production"
             }
