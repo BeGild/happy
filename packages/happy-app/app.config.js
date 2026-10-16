@@ -1,16 +1,40 @@
 const { execFileSync } = require('node:child_process');
 
 const variant = process.env.APP_ENV || 'development';
-const name = {
-    development: "Happy (dev)",
-    preview: "Happy (preview)",
-    production: "Happy"
-}[variant];
-const bundleId = {
-    development: "com.slopus.happy.dev",
-    preview: "com.slopus.happy.preview",
-    production: "com.ex3ndr.happy"
-}[variant];
+
+/**
+ * Branding is deployment-specific, so it is read from the environment instead of
+ * being hardcoded: a fork that ships under its own name must not have to edit
+ * code to do it. Every default below is the upstream value, so an environment
+ * that sets nothing builds exactly what upstream builds.
+ *
+ * To rebrand, set:
+ *   APP_BRAND_NAME    display name          (default "Happy")
+ *   APP_BRAND_SLUG    Expo slug             (default "happy")
+ *   APP_BRAND_SCHEME  deep-link scheme      (default "happy")
+ *   APP_BRAND_DOMAIN  universal-link host   (default "app.happy.engineering")
+ *   APP_BUNDLE_ID     production bundle id  (default "com.ex3ndr.happy");
+ *                     dev/preview derive as "<id>.development" / "<id>.preview"
+ */
+const brandName = process.env.APP_BRAND_NAME || 'Happy';
+const brandSlug = process.env.APP_BRAND_SLUG || 'happy';
+const brandScheme = process.env.APP_BRAND_SCHEME || 'happy';
+const brandDomain = process.env.APP_BRAND_DOMAIN || 'app.happy.engineering';
+
+const name = process.env.APP_BRAND_NAME
+    ? (variant === 'production' ? brandName : `${brandName} (${variant})`)
+    : {
+        development: "Happy (dev)",
+        preview: "Happy (preview)",
+        production: "Happy"
+    }[variant];
+const bundleId = process.env.APP_BUNDLE_ID
+    ? (variant === 'production' ? process.env.APP_BUNDLE_ID : `${process.env.APP_BUNDLE_ID}.${variant}`)
+    : {
+        development: "com.slopus.happy.dev",
+        preview: "com.slopus.happy.preview",
+        production: "com.ex3ndr.happy"
+    }[variant];
 // const stagingElevenLabsAgentId = 'agent_7801k2c0r5hjfraa1kdbytpvs6yt';
 const productionElevenLabsAgentId = 'agent_6701k211syvvegba4kt7m68nxjmw';
 const elevenLabsAgentId = {
@@ -58,12 +82,12 @@ const buildMetadata = loadBuildMetadata();
 export default {
     expo: {
         name,
-        slug: "happy",
+        slug: brandSlug,
         version: "1.8.0",
         runtimeVersion: "21",
         orientation: "default",
         icon: "./sources/assets/images/icon.png",
-        scheme: "happy",
+        scheme: brandScheme,
         userInterfaceStyle: "automatic",
         ios: {
             supportsTablet: true,
@@ -88,7 +112,7 @@ export default {
                     : { NSAllowsLocalNetworking: true, NSAllowsArbitraryLoads: true }
             },
             ...(variant === 'production'
-                ? { associatedDomains: ["applinks:app.happy.engineering"] }
+                ? { associatedDomains: [`applinks:${brandDomain}`] }
                 : {})
         },
         android: {
@@ -105,7 +129,7 @@ export default {
             ],
             blockedPermissions: [
                 "android.permission.ACTIVITY_RECOGNITION",
-                // Not using external storage/media access for now — blocks Google Play photo/video permission declaration
+                // Not using external storage/media access for now 鈥?blocks Google Play photo/video permission declaration
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE",
                 "android.permission.READ_MEDIA_IMAGES",
@@ -120,7 +144,7 @@ export default {
                     "data": [
                         {
                             "scheme": "https",
-                            "host": "app.happy.engineering",
+                            "host": brandDomain,
                             "pathPrefix": "/"
                         }
                     ],
